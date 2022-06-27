@@ -83,8 +83,8 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-test
-
-test-backend:
+          
+  test-backend:        
     docker:
       - image: circleci/node:13.8.0
     steps:
@@ -291,10 +291,10 @@ workflows:
       - test-frontend:
            requires: [build-frontend]
       - test-backend:
-           requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
+          requires: [build-backend]
+    #  - scan-backend:
+     #     requires: [build-backend]
+     # - scan-frontend:
       #     requires: [build-frontend]
       # - deploy-infrastructure:
       #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
