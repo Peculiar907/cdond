@@ -204,11 +204,14 @@ jobs:
        # Here's where you will add some code to rollback on failure      
         - destroy-environment:
            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
   run-migrations:
      docker:
        - image: circleci/node:13.8.0       
      steps:
       - checkout 
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Run migrations
           command: |
