@@ -187,13 +187,16 @@ jobs:
         - checkout 
         # Add ssh keys with fingerprint
         - add_ssh_keys:
-            fingerprints: [""]
+            fingerprints: ["4b:9d:3b:94:70:f1:a5:20:87:e0:53:85:e7:ad:f1:e9"]
        # attach workspace
+        - attach_workspace:
+           at: ~/
         - run:
             name: Install dependencies
             command: |
-             # Your code here
-             
+              apk add --update ansible
+              pip install awscli
+
         - run:
             name: Configure server
             command: |
@@ -333,8 +336,8 @@ workflows:
            filters:
              branches:
                only: [master]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
+      - configure-infrastructure:
+           requires: [deploy-infrastructure]
       # - run-migrations:
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
