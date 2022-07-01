@@ -1,10 +1,13 @@
 version: 2.1
 
+
 commands:
-   destroy-environment:
+ destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-        # Add parameter here   
+      # Add parameter here
+      workflow_id:
+        type: string
     steps:
       - run:
          name: Destroy environments
@@ -157,7 +160,6 @@ jobs:
               --tags project=udapeople \
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
-       
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -166,8 +168,7 @@ jobs:
               --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> ~/project/.circleci/ansible/inventory.txt
 
-              cat ~/project/.circleci/ansible/inventory.txt
-             
+              cat ~/project/.circleci/ansible/inventory.txt       
       - persist_to_workspace:
           root: ~/
           paths:
@@ -323,11 +324,11 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
            requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [test-feature-branch]
+      - deploy-infrastructure:
+           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+           filters:
+             branches:
+               only: [master]
       # - configure-infrastructure:
       #     requires: [deploy-infrastructure]
       # - run-migrations:
