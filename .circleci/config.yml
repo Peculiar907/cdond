@@ -16,27 +16,25 @@ commands:
           echo "Destroying environment: << parameters.workflow_id >>"
           aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
           aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
-
-revert-migrations:
-  description: Revert the last migration if successfully run in the current workflow.
-  parameters:
-    workflow_id:
-    type: string 
+ 
+ revert_migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      workflow_id:
+        type: string
     steps:
-       - run:
+      - run:
           name: Revert migrations
           when: on_fail
           command: |
-           # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable  
-           export  SUCCESS = $(curl --insecure  https://kvdb.io/Ag2SziqiUCwXS3ECst173G/migration__<< parameters.workflow_id >>)
-           if(( $SUCCESS==1 )); 
-           then
-             cd ~/project/backend
-             npm install
-             npm run build
-             npm run migrations:revert    
-           fi
-            
+            export SUCCESS=$(curl --insecure https://kvdb.io/Ag2SziqiUCwXS3ECst173G/migration__<< parameters.workflow_id >>)
+            if(( $SUCCESS==1 ));
+            then
+              cd ~/project/backend
+              npm install
+              npm run build
+              npm run migrations:revert
+            fi     
 jobs:
   build-frontend:
     docker:
@@ -214,7 +212,6 @@ jobs:
       - run:
           name: Run migrations
           command: |
-             # Your code here
              cd backend
              npm install
              npm run migrations > migrations_dump.txt
@@ -223,7 +220,6 @@ jobs:
       - run:
          name: Send migration results to kvdb.io
          command: |
-            # Your code here
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
             curl https://kvdb.io/Ag2SziqiUCwXS3ECst173G/migration_${i/files (master)CIRCLE_WORKFLOW_ID:0:7}  -d '1'
@@ -257,8 +253,7 @@ jobs:
               export API_URL="http://${BACKEND_IP}:3030"
               echo "API_URL = ${API_URL}"
               echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-              cat frontend/.env
-              
+              cat frontend/.env        
       - run:
           name: Deploy frontend object
           command: |
@@ -269,8 +264,10 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive     
       - destroy-environment:
              workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
-      - revert-migrations:
-            workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
+       
 
 #   deploy-backend:
 #     docker:
