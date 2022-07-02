@@ -149,25 +149,26 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags Project=udapeople \
-              --stack-name "udapeople-backend-1ae3bbf " \
-              --parameter-overrides ID="1ae3bbf"
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+            
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople \
-              --stack-name "udapeople-frontend-1ae3bbf " \
-              --parameter-overrides ID="1ae3bbf"
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-              aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-backend-1ae3bbf" \
-              --output text >> ~/project/.circleci/ansible/inventory.txt
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:Project,Values=udapeople" \
+            --output text >> ~/project/.circleci/ansible/inventory.txt
 
-              cat ~/project/.circleci/ansible/inventory.txt       
+            cat ~/project/.circleci/ansible/inventory.txt       
       - persist_to_workspace:
           root: ~/
           paths:
@@ -265,7 +266,7 @@ jobs:
             npm install
             npm run build          
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-frontend-1ae3bbf --recursive  
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment:
              workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
@@ -289,7 +290,37 @@ jobs:
 #           command: |
 #             # your code here
 #       # Here's where you will add some code to rollback on failure  
-
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["4b:9d:3b:94:70:f1:a5:20:87:e0:53:85:e7:ad:f1:e9"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            pip install awscli
+            apk add --update --no-cache tar gzip nodejs npm curl
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      - revert_migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}     
 #   smoke-test:
 #     docker:
 #       # Lightweight Docker image 
