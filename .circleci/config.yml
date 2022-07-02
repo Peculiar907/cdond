@@ -244,7 +244,6 @@ jobs:
           name: Install dependencies
           command: |
             pip install awscli
-            pip install ansible
             apk add --update --no-cache tar gzip nodejs npm curl
       - run:
           name: Get backend url
