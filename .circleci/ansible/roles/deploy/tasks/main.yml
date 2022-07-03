@@ -42,6 +42,7 @@
     dest: .
 
 - name: Executing node app
+  become: true
   shell: |
     npm install
     pm2 stop default
