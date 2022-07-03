@@ -1,5 +1,5 @@
 ---
-- name: "update apt packages."
+- name: "update packages."
   become: true
   apt:
     update_cache: yes
@@ -9,8 +9,7 @@
   apt:
     upgrade: yes
 
-
-- name: "remove dependencies that are no longer required"
+- name: remove dependencies that are no longer required
   become: true
   apt:
     autoremove: yes
