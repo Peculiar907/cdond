@@ -270,26 +270,8 @@ jobs:
       - destroy-environment:
              workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+          workflow_id: ${CIRCLE_WORKFLOW_ID:}
 
-       
-
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
   deploy-backend:
     docker:
       - image: python:3.7-alpine3.11
@@ -361,23 +343,40 @@ jobs:
       - destroy-environment:
              workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert_migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}     
-          
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}             
 
-#   cloudfront-update:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Update cloudfront distribution
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  cloudfront-update:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            pip install awscli
+            apk add --update --no-cache tar gzip nodejs npm curl
+      - run:
+           name: send oldworkflowID to Kvdb.io
+           command: |
+            export WORKFLOW_ID=$(aws cloudformation \
+             list-exports --query "Exports[?Name==\`WORKFLOW_ID\`].Value" \
+             --no-paginate --output text)
+             curl https://kvdb.io/Kf3wTbUinicTSV8tLFu1PQ/OLD_WORKFLOW_ID -d "$WORKFLOW_ID"
+            echo WORKFLOW_ID: "$WORKFLOW_ID"
+      - run:
+          name: Update cloudfront distribution
+          command: |
+             aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
 
 # cleanup:
 #     docker:
