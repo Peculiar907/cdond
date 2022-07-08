@@ -1,6 +1,6 @@
 version: 2.1
-
-
+orbs:
+  aws-cli: circleci/aws-cli@3.1.1
 commands:
  destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -392,35 +392,17 @@ jobs:
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"
             
-            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
+            if [[ "$OldWorkflowID" =~ "$CIRCLE_WORKFLOW_ID" ]]
             then
               echo "-----------------Delete Confirmed----------------"
-              # aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
-              # aws s3 rm "s3://${OldWorkflowID}" --recursive
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws s3 rm "s3://${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "${OldWorkflowID}"
             else
               echo "----------------No need to clean up-----------------"
             fi         
        
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
-            
 
 workflows:
   default:
