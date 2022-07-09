@@ -16,7 +16,7 @@
   become: true
   copy:
     src: node_exporter.service
-    dest: /etc/systemd/system/
+    dest: /etc/systemd/system/node_exporter.service
 
 - name: "enable node_exporter service"
   become: true
