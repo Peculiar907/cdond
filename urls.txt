@@ -1,0 +1,12 @@
+[URL01]
+https://github.com/Peculiar907/cdond
+
+[URL02]
+http://udapeople-b5b8894.s3-website-us-east-1.amazonaws.com/#/employees
+
+ [URL03]
+http://d2qadrb41i11kq.cloudfront.net/#/employees
+
+[URL5]
+http://ec2-54-87-62-21.compute-1.amazonaws.com:9090/targets
+
