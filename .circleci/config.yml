@@ -392,10 +392,10 @@ jobs:
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"
             
-            if [[ "$OldWorkflowID" =~ "$CIRCLE_WORKFLOW_ID" ]]
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
             then
               echo "-----------------Delete Confirmed----------------"
-              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws s3 rb s3://udapeople-$OldWorkflowID --force
               aws s3 rm "s3://${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "${OldWorkflowID}"
@@ -444,15 +444,39 @@ workflows:
                only: [master]
       - configure-infrastructure:
            requires: [deploy-infrastructure]
+           filters:
+             branches:
+               only: [master]
       - run-migrations:
           requires: [configure-infrastructure]
+          filters:
+             branches:
+               only: [master]
       - deploy-frontend:
-          requires: [run-migrations]                    
+          requires: [run-migrations]  
+          filters:
+             branches:
+               only: [master]                  
       - deploy-backend:
-          requires: [run-migrations]
+          requires:  [run-migrations]
+          filters:
+            branches:
+               only: [master]
+
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
+          filters:
+            branches:
+               only: [master]
+
       - cloudfront-update:
           requires: [smoke-test]
+          filters:
+            branches:
+               only: [master]
+
       - cleanup:
          requires: [cloudfront-update]
+         filters:
+            branches:
+               only: [master]
